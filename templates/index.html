@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeneJam - The Scene Splitter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 300;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+        }
+        
+        .app-title {
+            font-weight: 300;
+        }
+        
+        .home-button {
+            font-weight: 300;
+        }
+        
+        .file-input-label {
+            font-weight: 300;
+        }
+        
+        .btn {
+            font-weight: 300;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+        
+        .footer h2 {
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .footer p {
+            font-size: 1rem;
+            font-weight: 300;
+            opacity: 0.8;
+        }
+        
+        .upload-options {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        
+        .upload-option-btn {
+            background-color: #6a11cb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 300;
+            transition: background-color 0.3s;
+        }
+        
+        .upload-option-btn:hover {
+            background-color: #8e24aa;
+        }
+        
+        .upload-option-btn.active {
+            background-color: #4a148c;
+        }
+    </style>
+</head>
+<body>
+    <!-- Star background animation -->
+    <div id="stars-background"></div>
+    
+    <div class="container">
+        <nav class="top-nav">
+            <a href="/" class="home-button"><i class="fas fa-home"></i></a>
+        </nav>
+        
+        <header>
+            <h2 class="app-title">The Scene Splitter</h2>
+            <p>Upload a video to automatically detect scene changes</p>
+        </header>
+
+        <main>
+            <section id="upload-section">
+                <div id="drop-area" class="drop-area">
+                    <div class="drop-area-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag your video file here or</p>
+                        <label for="file-input" class="file-input-label">Select a file</label>
+                        <input type="file" id="file-input" accept=".mp4,.avi,.mov" hidden>
+                        <p class="file-info">Supported formats: MP4, AVI, MOV (max 500MB)</p>
+                    </div>
+                </div>
+                <div class="upload-options">
+                    <button id="normal-mode" class="upload-option-btn active">Rilevamento scene</button>
+                    <button id="mode-10s" class="upload-option-btn">Lo spezzettatore 10s</button>
+                </div>
+                <div id="upload-progress" class="progress-container" style="display: none;">
+                    <p>Processing...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">0%</p>
+                </div>
+            </section>
+
+            <section id="results-section" style="display: none;">
+                <div class="results-header">
+                    <h2>Detected Scenes</h2>
+                    <div class="video-info" id="video-info">
+                        <!-- Video information will be inserted here -->
+                    </div>
+                    <div class="controls">
+                        <button id="download-btn" class="btn"><i class="fas fa-download"></i> Download all images</button>
+                        <button id="download-videos-btn" class="btn btn-secondary"><i class="fas fa-film"></i> Download all videos</button>
+                        <div class="sensitivity-control">
+                            <label for="sensitivity">Sensitivity:</label>
+                            <input type="range" id="sensitivity" min="10" max="50" value="30" step="5">
+                            <span id="sensitivity-value">30</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="scenes-container" class="scenes-container">
+                    <!-- Detected scenes will be inserted here -->
+                </div>
+            </section>
+        </main>
+
+        <div id="error-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Error</h2>
+                <p id="error-message"></p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <h2><i class="fas fa-music"></i> エーテル / GeneJam</h2>
+            <p>"We are all connected through the Ether"</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stars.js') }}"></script>
+    <script>
+        // Controlla se c'è un video_id da caricare automaticamente
+        document.addEventListener('DOMContentLoaded', () => {
+            const videoId = "{{ video_id|safe }}";
+            const mode = "{{ mode|safe }}";
+            
+            if (videoId && videoId.trim() !== '') {
+                // Seleziona la modalità corretta se specificata
+                if (mode === '10s') {
+                    const mode10sBtn = document.getElementById('mode-10s');
+                    const normalModeBtn = document.getElementById('normal-mode');
+                    if (mode10sBtn && normalModeBtn) {
+                        mode10sBtn.classList.add('active');
+                        normalModeBtn.classList.remove('active');
+                        // Imposta la modalità corrente nella variabile globale dell'app.js
+                        window.currentMode = '10s';
+                    }
+                }
+                
+                // Simula il caricamento del video da YouTube solo se c'è un video_id valido
+                const videoLoadEvent = new CustomEvent('load-youtube-video', {
+                    detail: { videoId: videoId, mode: mode }
+                });
+                document.dispatchEvent(videoLoadEvent);
+            }
+        });
+    </script>
+</body>
+</html>

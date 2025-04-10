@@ -1,0 +1,43 @@
+# Ambienti virtuali
+venv/
+venv_new/
+env/
+ENV/
+.env
+.venv
+
+# File di cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# File di sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Cartelle di upload e risultati (manteniamo solo la struttura)
+uploads/*
+!uploads/.gitkeep
+results/*
+!results/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# File IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# File di distribuzione
+build/
+dist/
+*.egg-info/
