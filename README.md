@@ -72,4 +72,4 @@ MIT
 
 ## Autore
 
-[Il tuo nome] 
+[Il tuo nome] # lospez
